@@ -1,6 +1,6 @@
 = obviousml
 
-Description goes here.
+Machine learning library for ruby
 
 == Contributing to obviousml
  
