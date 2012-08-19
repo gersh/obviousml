@@ -1,5 +1,5 @@
 module Algebra
-  @standard_operators = [:+,:-,:*,:/]
+  @standard_operators = [:+,:-,:*,:/,:**]
   @operator_derivative={}
   def self.standard_operators()
     @standard_operators
@@ -93,13 +93,12 @@ module Algebra
       return
     end
     # Alter standard operators of the class so we it will correctly compute the operator with us
-    # We will assume the operators commutative
     klass.class_eval do
       Algebra.standard_operators.each{|o|
         m=instance_method(o)
         define_method(o) do |*args,&block|
           if args.length == 1 && args[0].is_a?(Algebra::Object)
-            Algebra::FunctionalObject.new(args[0],o,[self],block)
+            Algebra::FunctionalObject.new(self,o,args,block)
           else
             m.bind(self).(*args,&block)
           end
@@ -107,6 +106,9 @@ module Algebra
       }
       define_method(:partial_d) do |wrt|
         0
+      end
+      define_method(:compute) do 
+        self
       end
     end
     # Add the generic version of the class to our namespace so we can create a generic version of the object type
@@ -135,7 +137,10 @@ module Algebra
     a.partial_d(wrt) * b + a * b.partial_d(wrt)
   }
   add_operator_derivative(:**) {|wrt,a,b|
-    b * (a.partial_d(wrt) ** (b-1))
+    if b.partial_d(wrt) != 0
+      throw "Exponentials currently not supported\n"
+    end
+    a.partial_d(wrt) * b * (a ** (b-1)) 
   }
     
   

@@ -69,7 +69,7 @@ class TestAlgebra < Test::Unit::TestCase
       end
     }
     if r!=12
-      flunk "It calculates the derivative of x**3 at 3 as " + r.to_s
+      flunk "It calculates the derivative of x**3 as " + d.to_s +  " and at 2 as " + r.to_s
     end
   end
 end
