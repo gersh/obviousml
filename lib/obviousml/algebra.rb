@@ -19,6 +19,7 @@ module Algebra
    def partial_d(wrt)
    end
    def variables()
+     []
    end
   end
   # Unbound variable
@@ -27,7 +28,16 @@ module Algebra
       @name=name
     end
     def compute
-      yield @name
+      v=yield @name
+      if v==nil
+        throw "Did not yield value for variable " + @name
+      end
+      v
+    end
+    def compute_from_hash(hash)
+      self.compute{|v|
+        hash[v]
+      }
     end
     def partial_d(wrt)
       puts "Partial d" + wrt + "\n"
@@ -71,10 +81,10 @@ module Algebra
         end
         
       end
-      def variables()
+      def variables(&block)
         vs=@args.map{|a|a.variables}
         if @klass!=nil && @klass.is_a?(Algebra::Object)
-          vs.inject(@klass.variables(),:+)
+          vs.inject(@klass.variables(&block),:+)
         else
           vs.inject([],:+)
         end
@@ -104,12 +114,16 @@ module Algebra
           end
         end
       }
+      define_method(:variables) do 
+        []
+      end
       define_method(:partial_d) do |wrt|
         0
       end
       define_method(:compute) do 
         self
       end
+  
     end
     # Add the generic version of the class to our namespace so we can create a generic version of the object type
     our_klass=Class.new(GenericObject)
@@ -120,18 +134,19 @@ module Algebra
             Algebra::FunctionalObject.new(self,m,args,block)
           end
         end
-       
       }
       define_method(:initialize) do |name|
         super(name)
         self
       end   
-       
     end
     const_set(klass.name,our_klass)
   end
   add_operator_derivative(:+)  {|wrt,a,b|
     a.partial_d(wrt) + b.partial_d(wrt)
+  }
+  add_operator_derivative(:-)  {|wrt,a,b|
+    a.partial_d(wrt) - b.partial_d(wrt)
   }
   add_operator_derivative(:*)  {|wrt,a,b|
     a.partial_d(wrt) * b + a * b.partial_d(wrt)
